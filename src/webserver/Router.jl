@@ -76,10 +76,11 @@ function http_router_for(session::ServerSession)
                     "Set the `ai_provider` option to \"cloud\" or \"ollama\"."), 503)
             end
 
+            kwargs = isempty(strip(system_prompt)) ? (;) : (; system_prompt)
             result = if mode == "code"
-                complete_code(provider, prompt; system_prompt)
+                complete_code(provider, prompt; kwargs...)
             else
-                complete(provider, prompt; system_prompt)
+                complete(provider, prompt; kwargs...)
             end
             return json_response(json_ok(result))
         catch e
