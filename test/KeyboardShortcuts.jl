@@ -1,7 +1,7 @@
 using Test
 import Pluto
 import Pluto.KeyboardShortcuts:
-    KeyboardShortcut, ShortcutMap,
+    KeyboardShortcut, ShortcutMap, ShortcutHint,
     default_shortcuts, register_shortcut!,
     resolve_conflicts, shortcut_hints, is_accessible
 
@@ -106,7 +106,7 @@ import Pluto.KeyboardShortcuts:
             @test h.key isa String
             @test h.description isa String
             @test h.accessibility_label isa String
-            @test h isa NamedTuple
+            @test h isa ShortcutHint
         end
 
         # Every hint returned for :global must actually be global

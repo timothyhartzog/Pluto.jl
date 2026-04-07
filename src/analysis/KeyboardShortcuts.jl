@@ -19,7 +19,7 @@ conflicts = resolve_conflicts(map)
 """
 module KeyboardShortcuts
 
-export KeyboardShortcut, ShortcutMap
+export KeyboardShortcut, ShortcutMap, ShortcutHint
 export default_shortcuts, register_shortcut!, resolve_conflicts, shortcut_hints, is_accessible
 
 # ---------------------------------------------------------------------------
@@ -148,8 +148,15 @@ end
 # UI hint generation
 # ---------------------------------------------------------------------------
 
+"""A named-tuple element returned by `shortcut_hints`."""
+const ShortcutHint = NamedTuple{(:action, :key, :description, :accessibility_label), Tuple{Symbol, String, String, String}}
+
+# ---------------------------------------------------------------------------
+# UI hint generation
+# ---------------------------------------------------------------------------
+
 """
-    shortcut_hints(map::ShortcutMap, context::Symbol=:global) -> Vector{NamedTuple}
+    shortcut_hints(map::ShortcutMap, context::Symbol=:global) -> Vector{ShortcutHint}
 
 Return a vector of named tuples suitable for rendering shortcut hints in the UI.
 
@@ -160,17 +167,14 @@ Each element has the shape:
 
 Pass `context=:all` to include shortcuts from every context.
 """
-function shortcut_hints(
-    map::ShortcutMap,
-    context::Symbol = :global,
-)::Vector{NamedTuple{(:action, :key, :description, :accessibility_label), Tuple{Symbol, String, String, String}}}
+function shortcut_hints(map::ShortcutMap, context::Symbol = :global)::Vector{ShortcutHint}
     filtered = if context === :all
         collect(values(map))
     else
         filter(s -> s.context === context, collect(values(map)))
     end
     sort!(filtered; by = s -> string(s.action))
-    return [
+    return ShortcutHint[
         (action=s.action, key=s.key, description=s.description, accessibility_label=s.accessibility_label)
         for s in filtered
     ]
