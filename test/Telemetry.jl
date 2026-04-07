@@ -192,6 +192,12 @@ import Dates
             @test m.by_provider["anthropic"].count == 2
             @test m.by_provider["openai"].error_rate ≈ 1 / 3
             @test m.by_provider["anthropic"].error_rate ≈ 1 / 2
+            # Validate aggregated latency matches the three openai records (100, 200, 300)
+            @test m.by_provider["openai"].mean_latency_ms ≈ (100.0 + 200.0 + 300.0) / 3
+            @test m.by_provider["openai"].p50_latency_ms == 200.0
+            # Validate token totals for the openai records (200+300+250 prompt, 100+150+0 completion)
+            @test m.by_provider["openai"].total_prompt_tokens == 200 + 300 + 250
+            @test m.by_provider["openai"].total_completion_tokens == 100 + 150 + 0
         end
 
         @testset "by_model" begin
