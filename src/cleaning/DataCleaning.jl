@@ -197,8 +197,8 @@ function _iqr(v::AbstractVector)
     isempty(nonmissing) && return 0.0
     sorted = sort(nonmissing)
     n = length(sorted)
-    q1_idx = max(1, round(Int, 0.25 * n + 0.5))
-    q3_idx = min(n, round(Int, 0.75 * n + 0.5))
+    q1_idx = max(1, ceil(Int, 0.25 * n))
+    q3_idx = min(n, ceil(Int, 0.75 * n))
     Float64(sorted[q3_idx]) - Float64(sorted[q1_idx])
 end
 
@@ -283,21 +283,39 @@ function _apply_normalize(col_vals::Vector{Any}, op::NormalizeOperation)
         hi = Float64(maximum(nm))
         denom = hi - lo
         return map(col_vals) do v
-            ismissing(v) ? missing : (denom ≈ 0.0 ? 0.0 : (Float64(v) - lo) / denom)
+            if ismissing(v)
+                missing
+            elseif denom ≈ 0.0
+                0.0
+            else
+                (Float64(v) - lo) / denom
+            end
         end
 
     elseif method == ZScoreNormalization
         μ = mean(Float64.(nm))
         σ = length(nm) <= 1 ? 0.0 : sqrt(sum((Float64(x) - μ)^2 for x in nm) / (length(nm) - 1))
         return map(col_vals) do v
-            ismissing(v) ? missing : (σ ≈ 0.0 ? 0.0 : (Float64(v) - μ) / σ)
+            if ismissing(v)
+                missing
+            elseif σ ≈ 0.0
+                0.0
+            else
+                (Float64(v) - μ) / σ
+            end
         end
 
     elseif method == RobustNormalization
         med = median(Float64.(nm))
         iqr = _iqr(col_vals)
         return map(col_vals) do v
-            ismissing(v) ? missing : (iqr ≈ 0.0 ? 0.0 : (Float64(v) - med) / iqr)
+            if ismissing(v)
+                missing
+            elseif iqr ≈ 0.0
+                0.0
+            else
+                (Float64(v) - med) / iqr
+            end
         end
     end
 end
