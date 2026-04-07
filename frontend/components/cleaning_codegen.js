@@ -2,7 +2,9 @@
 // Pure functions - no UI dependencies. Exported for testing and use in CleaningWidgets.js.
 
 // Named constants for lambda transforms to avoid duplicating string literals
+/** Julia lambda that replaces one or more consecutive whitespace characters with a single space. */
 export const TRANSFORM_COLLAPSE_SPACES = `x -> replace(x, r"\\s+" => " ")`
+/** Julia lambda that removes all non-word, non-space characters (i.e. punctuation and symbols). */
 export const TRANSFORM_REMOVE_SPECIAL = `x -> replace(x, r"[^\\w\\s]" => "")`
 
 /**

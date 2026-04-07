@@ -59,12 +59,16 @@ function StringsWidget({ on_insert }) {
     const [do_remove_special, set_remove_special] = useState(false)
     const [result, set_result] = useState("df_clean")
 
-    // Enforce mutual exclusion among case transforms
+    // Enforce mutual exclusion among case transforms using a setters map
+    const case_setters = { lowercase: set_lowercase, uppercase: set_uppercase, titlecase: set_titlecase }
     const handle_case_change = useCallback(
         (type, checked) => {
-            if (type === "lowercase") { set_lowercase(checked); if (checked) { set_uppercase(false); set_titlecase(false) } }
-            if (type === "uppercase") { set_uppercase(checked); if (checked) { set_lowercase(false); set_titlecase(false) } }
-            if (type === "titlecase") { set_titlecase(checked); if (checked) { set_lowercase(false); set_uppercase(false) } }
+            case_setters[type](checked)
+            if (checked) {
+                Object.entries(case_setters)
+                    .filter(([k]) => k !== type)
+                    .forEach(([, setter]) => setter(false))
+            }
         },
         []
     )
@@ -161,8 +165,6 @@ function DatesWidget({ on_insert }) {
         </div>
     `
 }
-
-// ─── Workflow chain helper ────────────────────────────────────────────────────
 
 // ─── Main panel ──────────────────────────────────────────────────────────────
 
