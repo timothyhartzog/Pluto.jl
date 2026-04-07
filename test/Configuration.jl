@@ -25,10 +25,11 @@ end
             Pluto.Configuration.ServerOptions,
             Pluto.Configuration.SecurityOptions,
             Pluto.Configuration.EvaluationOptions,
-            Pluto.Configuration.CompilerOptions
+            Pluto.Configuration.CompilerOptions,
         ]
         sets = [collect(fieldnames(s)) for s in structs]
-        vcat(sets...)::Vector{Symbol}
+        ai_fields = [Symbol("ai_", f) for f in fieldnames(Pluto.Configuration.AIOptions)]
+        vcat(vcat(sets...), ai_fields)::Vector{Symbol}
     end
 
     from_flat_kwargs_kwargs = let
