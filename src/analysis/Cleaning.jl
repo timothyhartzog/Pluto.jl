@@ -425,7 +425,7 @@ function preview_operation(data::CleaningTable, op::DropMissing)::PreviewResult
     dropped = sum(.!keep)
     affected_cols = filter(c -> haskey(data, c), cols)
     # sample: up to 5 rows that would be dropped
-    drop_indices = findall(.!keep)[1:min(5, dropped)]
+    drop_indices = dropped > 0 ? findall(.!keep)[1:min(5, dropped)] : Int[]
     sb = Dict{Symbol,Vector}(c => data[c][drop_indices] for c in affected_cols)
     PreviewResult(
         dropped,
@@ -439,15 +439,18 @@ end
 function preview_operation(data::CleaningTable, op::Union{FillConstant,FillMean,FillMedian,FillMode})::PreviewResult
     result = apply_operation(data, op)
     cols = _target_columns(data, op.columns)
-    affected_cols = filter(c -> haskey(data, c), cols)
+    candidate_cols = filter(c -> haskey(data, c), cols)
 
     total_filled = 0
+    affected_cols = Symbol[]
     sb = Dict{Symbol,Vector}()
     sa = Dict{Symbol,Vector}()
-    for col in affected_cols
+    for col in candidate_cols
         before_v = data[col]
         after_v  = result[col]
         missing_indices = findall(ismissing, before_v)
+        isempty(missing_indices) && continue
+        push!(affected_cols, col)
         total_filled += length(missing_indices)
         idx = missing_indices[1:min(5, length(missing_indices))]
         sb[col] = before_v[idx]
