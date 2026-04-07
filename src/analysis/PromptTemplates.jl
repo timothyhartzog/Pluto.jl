@@ -36,8 +36,6 @@ end
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-_indent(s::String, n::Int=2) = join("  " ^ n .* split(s, "\n"), "\n")
-
 # ── Import Assistance Template ────────────────────────────────────────────────
 
 """
@@ -458,7 +456,7 @@ scatter(df.col_x, df.col_y; xlabel="col_x", ylabel="col_y")
             "  " * join("`" .* numeric_cols .* "`", ", "),
             "",
             "Suggestions:",
-            "  - Correlation matrix: `cor(Matrix(df[!, $(repr(Symbol.(numeric_cols)))]))` ",
+            "  - Correlation matrix: `cor(Matrix(df[!, $(repr(Symbol.(numeric_cols)))]))`",
             "  - Scatter plot: `scatter(df.$(numeric_cols[1]), df.$(numeric_cols[2]))`",
             "  - Pair plot (requires StatsPlots): `@df df cornerplot(cols($(repr(numeric_cols))))`",
         ]
