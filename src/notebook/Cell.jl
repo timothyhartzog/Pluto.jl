@@ -7,6 +7,10 @@ const METADATA_DISABLED_KEY = "disabled"
 const METADATA_SHOW_LOGS_KEY = "show_logs"
 const METADATA_SKIP_AS_SCRIPT_KEY = "skip_as_script"
 
+# Provenance metadata keys for AI-generated code
+const METADATA_AI_GENERATED_KEY = "ai_generated"
+const METADATA_PROVENANCE_KEY = "provenance"
+
 # Make sure to keep this in sync with DEFAULT_CELL_METADATA in ../frontend/components/Editor.js
 const DEFAULT_CELL_METADATA = Dict{String, Any}(
     METADATA_DISABLED_KEY => false,
@@ -87,3 +91,51 @@ end
 can_show_logs(c::Cell) = get(c.metadata, METADATA_SHOW_LOGS_KEY, DEFAULT_CELL_METADATA[METADATA_SHOW_LOGS_KEY])
 is_skipped_as_script(c::Cell) = get(c.metadata, METADATA_SKIP_AS_SCRIPT_KEY, DEFAULT_CELL_METADATA[METADATA_SKIP_AS_SCRIPT_KEY])
 must_be_commented_in_file(c::Cell) = is_disabled(c) || is_skipped_as_script(c) || c.depends_on_disabled_cells || c.depends_on_skipped_cells
+
+"""
+    is_ai_generated(cell::Cell) -> Bool
+
+Return `true` if the cell's code was flagged as AI-generated via [`set_provenance!`](@ref).
+"""
+is_ai_generated(c::Cell) = get(c.metadata, METADATA_AI_GENERATED_KEY, false)
+
+"""
+    get_provenance(cell::Cell) -> Union{Nothing, Dict{String,Any}}
+
+Return the provenance dict attached to the cell, or `nothing` if none is set.
+
+The dict typically contains fields such as `"tool"`, `"model"`, and `"generated_at"`.
+"""
+get_provenance(c::Cell) = get(c.metadata, METADATA_PROVENANCE_KEY, nothing)
+
+"""
+    set_provenance!(cell::Cell, provenance::Dict{String,Any})
+
+Attach provenance metadata to a cell, marking it as AI-generated.
+
+`provenance` should be a `Dict` with descriptive fields, e.g.:
+
+```julia
+set_provenance!(cell, Dict(
+    "tool"         => "Pluto AI",
+    "model"        => "gpt-4o",
+    "generated_at" => string(now()),
+))
+```
+"""
+function set_provenance!(c::Cell, provenance::Dict{String,Any})
+    c.metadata[METADATA_AI_GENERATED_KEY] = true
+    c.metadata[METADATA_PROVENANCE_KEY] = provenance
+    nothing
+end
+
+"""
+    clear_provenance!(cell::Cell)
+
+Remove provenance metadata from a cell and unmark it as AI-generated.
+"""
+function clear_provenance!(c::Cell)
+    delete!(c.metadata, METADATA_AI_GENERATED_KEY)
+    delete!(c.metadata, METADATA_PROVENANCE_KEY)
+    nothing
+end
