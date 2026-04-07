@@ -47,6 +47,8 @@ include("./notebook/path helpers.jl")
 include("./notebook/Export.jl")
 include("./Configuration.jl")
 
+include("./ai/AIProvider.jl")
+
 include("./evaluation/Tokens.jl")
 include("./evaluation/Throttled.jl")
 include("./runner/PlutoRunner/src/PlutoRunner.jl")
