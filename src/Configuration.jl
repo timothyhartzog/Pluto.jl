@@ -273,6 +273,33 @@ These options will be passed as command line argument to newly launched processe
     cpu_target::Union{Nothing, String} = CPU_TARGET_DEFAULT
 end
 
+const CLOUD_API_KEY_PATH_DEFAULT = nothing
+const CLOUD_API_KEY_ENV_DEFAULT = "PLUTO_CLOUD_API_KEY"
+const CLOUD_BASE_URL_DEFAULT = "https://api.openai.com/v1"
+const CLOUD_TIMEOUT_DEFAULT = 30.0
+const CLOUD_MAX_RETRIES_DEFAULT = 3
+
+"""
+    CloudProviderOptions([; kwargs...])
+
+Configuration for an external cloud/AI provider adapter.
+
+# Keyword arguments
+
+- `api_key_path::Union{Nothing,String} = $CLOUD_API_KEY_PATH_DEFAULT` Path to a file whose contents are the API key. If `nothing`, the key is read from the environment variable named by `api_key_env`.
+- `api_key_env::String = "$CLOUD_API_KEY_ENV_DEFAULT"` Name of the environment variable that holds the API key. Used when `api_key_path` is `nothing` or the referenced file does not exist.
+- `base_url::String = "$CLOUD_BASE_URL_DEFAULT"` Base URL of the cloud provider's REST API.
+- `timeout::Float64 = $CLOUD_TIMEOUT_DEFAULT` Per-request timeout in seconds.
+- `max_retries::Int = $CLOUD_MAX_RETRIES_DEFAULT` Maximum number of retry attempts for transient failures (5xx responses and network errors). Set to `0` to disable retries.
+"""
+@option mutable struct CloudProviderOptions
+    api_key_path::Union{Nothing,String} = CLOUD_API_KEY_PATH_DEFAULT
+    api_key_env::String = CLOUD_API_KEY_ENV_DEFAULT
+    base_url::String = CLOUD_BASE_URL_DEFAULT
+    timeout::Float64 = CLOUD_TIMEOUT_DEFAULT
+    max_retries::Int = CLOUD_MAX_RETRIES_DEFAULT
+end
+
 """
 Collection of all settings that configure a Pluto session. 
 
@@ -283,6 +310,7 @@ Collection of all settings that configure a Pluto session.
     security::SecurityOptions = SecurityOptions()
     evaluation::EvaluationOptions = EvaluationOptions()
     compiler::CompilerOptions = CompilerOptions()
+    cloud::CloudProviderOptions = CloudProviderOptions()
 end
 
 function from_flat_kwargs(;
