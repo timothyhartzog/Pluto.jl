@@ -271,15 +271,18 @@ Validate an `AIRequest` against the schema.  Throws `AIValidationError` if
 the request is malformed.
 """
 function validate_request(req::AIRequest)
-    req.intent ∈ VALID_INTENTS ||
+    if req.intent ∉ VALID_INTENTS
         throw(AIValidationError(
             "intent must be one of $(VALID_INTENTS), got :$(req.intent)",
             "intent",
         ))
-    isempty(strip(req.prompt)) &&
+    end
+    if isempty(strip(req.prompt))
         throw(AIValidationError("prompt must not be empty", "prompt"))
-    isempty(strip(req.model)) &&
+    end
+    if isempty(strip(req.model))
         throw(AIValidationError("model must not be empty", "model"))
+    end
     if req.max_tokens !== nothing && req.max_tokens <= 0
         throw(AIValidationError("max_tokens must be a positive integer, got $(req.max_tokens)", "max_tokens"))
     end
@@ -299,18 +302,21 @@ Validate an `AIResponse` against the schema.  Throws `AIValidationError` if
 the response is malformed.
 """
 function validate_response(resp::AIResponse)
-    resp.intent ∈ VALID_INTENTS ||
+    if resp.intent ∉ VALID_INTENTS
         throw(AIValidationError(
             "response intent must be one of $(VALID_INTENTS), got :$(resp.intent)",
             "intent",
         ))
-    isempty(strip(resp.model)) &&
+    end
+    if isempty(strip(resp.model))
         throw(AIValidationError("response model must not be empty", "model"))
-    resp.finish_reason ∈ ("stop", "length", "error", "content_filter", "tool_use") ||
+    end
+    if resp.finish_reason ∉ ("stop", "length", "error", "content_filter", "tool_use")
         throw(AIValidationError(
             "unrecognized finish_reason: \"$(resp.finish_reason)\"",
             "finish_reason",
         ))
+    end
     if resp.input_tokens !== nothing && resp.input_tokens < 0
         throw(AIValidationError("input_tokens must be non-negative, got $(resp.input_tokens)", "input_tokens"))
     end
