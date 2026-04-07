@@ -1,6 +1,10 @@
 // ─── Code generators for data cleaning widgets ───────────────────────────────
 // Pure functions - no UI dependencies. Exported for testing and use in CleaningWidgets.js.
 
+// Named constants for lambda transforms to avoid duplicating string literals
+export const TRANSFORM_COLLAPSE_SPACES = `x -> replace(x, r"\\s+" => " ")`
+export const TRANSFORM_REMOVE_SPECIAL = `x -> replace(x, r"[^\\w\\s]" => "")`
+
 /**
  * Generate Julia code for duplicate handling.
  * @param {Object} opts
@@ -86,8 +90,8 @@ export function gen_strings_code({ df, col, do_strip, do_lowercase, do_uppercase
     if (do_lowercase) transforms.push("lowercase")
     if (do_uppercase) transforms.push("uppercase")
     if (do_titlecase) transforms.push("titlecase")
-    if (do_collapse_spaces) transforms.push(`x -> replace(x, r"\\s+" => " ")`)
-    if (do_remove_special) transforms.push(`x -> replace(x, r"[^\\w\\s]" => "")`)
+    if (do_collapse_spaces) transforms.push(TRANSFORM_COLLAPSE_SPACES)
+    if (do_remove_special) transforms.push(TRANSFORM_REMOVE_SPECIAL)
 
     return gen_strings_code_clean({ df_name, col_name, res_name, transforms })
 }

@@ -1,6 +1,13 @@
 import { html, useContext, useState, useCallback } from "../imports/Preact.js"
 import { PlutoActionsContext } from "../common/PlutoContext.js"
-import { gen_duplicates_code, gen_strings_code_clean, gen_dates_code, gen_workflow_comment } from "./cleaning_codegen.js"
+import {
+    gen_duplicates_code,
+    gen_strings_code_clean,
+    gen_dates_code,
+    gen_workflow_comment,
+    TRANSFORM_COLLAPSE_SPACES,
+    TRANSFORM_REMOVE_SPECIAL,
+} from "./cleaning_codegen.js"
 
 // ─── Sub-widgets ─────────────────────────────────────────────────────────────
 
@@ -52,13 +59,23 @@ function StringsWidget({ on_insert }) {
     const [do_remove_special, set_remove_special] = useState(false)
     const [result, set_result] = useState("df_clean")
 
+    // Enforce mutual exclusion among case transforms
+    const handle_case_change = useCallback(
+        (type, checked) => {
+            if (type === "lowercase") { set_lowercase(checked); if (checked) { set_uppercase(false); set_titlecase(false) } }
+            if (type === "uppercase") { set_uppercase(checked); if (checked) { set_lowercase(false); set_titlecase(false) } }
+            if (type === "titlecase") { set_titlecase(checked); if (checked) { set_lowercase(false); set_uppercase(false) } }
+        },
+        []
+    )
+
     const transforms = []
     if (do_strip) transforms.push("strip")
     if (do_lowercase) transforms.push("lowercase")
     if (do_uppercase) transforms.push("uppercase")
     if (do_titlecase) transforms.push("titlecase")
-    if (do_collapse_spaces) transforms.push(`x -> replace(x, r"\\s+" => " ")`)
-    if (do_remove_special) transforms.push(`x -> replace(x, r"[^\\w\\s]" => "")`)
+    if (do_collapse_spaces) transforms.push(TRANSFORM_COLLAPSE_SPACES)
+    if (do_remove_special) transforms.push(TRANSFORM_REMOVE_SPECIAL)
 
     const df_name = df.trim() || "df"
     const col_name = col.trim() || "text_col"
@@ -78,9 +95,9 @@ function StringsWidget({ on_insert }) {
             </div>
             <div class="cw-checkboxes">
                 <label><input type="checkbox" checked=${do_strip} onChange=${(e) => set_strip(e.target.checked)} /> Strip whitespace</label>
-                <label><input type="checkbox" checked=${do_lowercase} onChange=${(e) => { set_lowercase(e.target.checked); if (e.target.checked) { set_uppercase(false); set_titlecase(false) } }} /> lowercase</label>
-                <label><input type="checkbox" checked=${do_uppercase} onChange=${(e) => { set_uppercase(e.target.checked); if (e.target.checked) { set_lowercase(false); set_titlecase(false) } }} /> UPPERCASE</label>
-                <label><input type="checkbox" checked=${do_titlecase} onChange=${(e) => { set_titlecase(e.target.checked); if (e.target.checked) { set_lowercase(false); set_uppercase(false) } }} /> Title Case</label>
+                <label><input type="checkbox" checked=${do_lowercase} onChange=${(e) => handle_case_change("lowercase", e.target.checked)} /> lowercase</label>
+                <label><input type="checkbox" checked=${do_uppercase} onChange=${(e) => handle_case_change("uppercase", e.target.checked)} /> UPPERCASE</label>
+                <label><input type="checkbox" checked=${do_titlecase} onChange=${(e) => handle_case_change("titlecase", e.target.checked)} /> Title Case</label>
                 <label><input type="checkbox" checked=${do_collapse_spaces} onChange=${(e) => set_collapse_spaces(e.target.checked)} /> Collapse spaces</label>
                 <label><input type="checkbox" checked=${do_remove_special} onChange=${(e) => set_remove_special(e.target.checked)} /> Remove special chars</label>
             </div>
