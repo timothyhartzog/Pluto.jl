@@ -187,8 +187,10 @@ end
 
         new_tbl, _ = DataCleaning.apply_operation(tbl, op)
         xs = [r.x for r in new_tbl]
-        @test abs(sum(xs)) < 1e-9        # mean ≈ 0
-        @test abs(sum(x^2 for x in xs) / (length(xs) - 1) - 1.0) < 1e-9   # std ≈ 1
+        μ = sum(xs) / length(xs)
+        σ = sqrt(sum((x - μ)^2 for x in xs) / (length(xs) - 1))
+        @test abs(μ) < 1e-9         # mean ≈ 0
+        @test abs(σ - 1.0) < 1e-9  # sample std ≈ 1
     end
 
     # -----------------------------------------------------------------------

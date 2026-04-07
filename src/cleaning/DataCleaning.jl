@@ -146,12 +146,10 @@ end
 function _replace_column(tbl, col::Symbol, new_values::AbstractVector)
     rows = Tables.rowtable(tbl)
     map(enumerate(rows)) do (i, row)
-        nt = Tables.Row(row)
-        # Reconstruct the named-tuple row with the updated column value
-        pairs = [c => (c === col ? new_values[i] : Tables.getcolumn(nt, c))
-                 for c in Tables.columnnames(nt)]
+        pairs = [c => (c === col ? new_values[i] : Tables.getcolumn(row, c))
+                 for c in Tables.columnnames(row)]
         NamedTuple(pairs)
-    end |> Tables.rowtable
+    end
 end
 
 """Compute the statistical mode of a vector (most frequent non-missing element)."""
@@ -199,9 +197,9 @@ function _iqr(v::AbstractVector)
     isempty(nonmissing) && return 0.0
     sorted = sort(nonmissing)
     n = length(sorted)
-    q1 = sorted[max(1, round(Int, 0.25 * n))]
-    q3 = sorted[min(n, round(Int, 0.75 * n))]
-    Float64(q3) - Float64(q1)
+    q1_idx = max(1, round(Int, 0.25 * n + 0.5))
+    q3_idx = min(n, round(Int, 0.75 * n + 0.5))
+    Float64(sorted[q3_idx]) - Float64(sorted[q1_idx])
 end
 
 
