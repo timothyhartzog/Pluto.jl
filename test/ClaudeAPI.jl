@@ -162,9 +162,10 @@ end
     # ── 6. Malformed JSON body ─────────────────────────────────────────────────
     @testset "Malformed JSON body is handled gracefully" begin
         resp = post_claude(port, "not json at all")
-        # The handler should not crash the server; it returns either 400 or 500
-        # depending on how json_get behaves on invalid input.
-        @test resp.status in (200, 400, 500)
+        # json_get returns "" for a missing key, so the empty-prompt guard fires
+        # and returns 400.  We do not accept 200 since that would mean invalid
+        # input was processed successfully, masking a potential bug.
+        @test resp.status in (400, 500)
         # Server is still alive after bad request
         ping = HTTP.get("http://localhost:$(port)/ping"; status_exception=false)
         @test ping.status == 200

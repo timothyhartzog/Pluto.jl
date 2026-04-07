@@ -66,12 +66,15 @@ x = 1 + 1
 
 /**
  * Enable request interception on `page` so that any POST to /api/claude
- * returns `mockBody` with status `mockStatus` instead of hitting the server.
+ * returns a fixed response instead of hitting the server.
+ *
+ * Pass `{ response: "..." }` for a success response, or
+ * `{ error: "...", status: 500 }` for an error response.
  *
  * @param {import("puppeteer").Page} page
  * @param {{ response: string, status?: number } | { error: string, status?: number }} opts
  */
-async function interceptClaude(page, opts = { response: MOCK_SINGLE_CELL_RESPONSE }) {
+async function interceptClaude(page, opts) {
     await page.setRequestInterception(true)
     page.on("request", (req) => {
         if (req.url().includes("/api/claude") && req.method() === "POST") {
