@@ -41,12 +41,18 @@ function parse_csv_preview(text, max_rows = 5) {
     return { columns, rows, total_rows: data_lines.length }
 }
 
-/** Infer a simple Julia-style type for each column from sample values. */
+/** Infer a simple Julia-style type for each column from sample values.
+ *  This is a best-effort heuristic for display purposes only; the generated
+ *  Julia code will rely on CSV.jl's own type detection.  Integers beyond
+ *  safe JavaScript integer range are classified as String by this heuristic.
+ */
 function infer_types(columns, rows) {
     return columns.map((_col, i) => {
         const values = rows.map((r) => r[i]).filter((v) => v != null && v !== "")
         if (values.length === 0) return "Any"
-        if (values.every((v) => /^-?\d+$/.test(v))) return "Int"
+        // Int check: all values must be whole numbers within safe JS integer range
+        if (values.every((v) => /^-?\d+$/.test(v) && Math.abs(Number(v)) <= Number.MAX_SAFE_INTEGER)) return "Int"
+        // Float64 check: values that look numeric but aren't all integers
         if (values.every((v) => /^-?\d*\.?\d+([eE][+-]?\d+)?$/.test(v))) return "Float64"
         if (values.every((v) => /^\d{4}-\d{2}-\d{2}/.test(v))) return "Date"
         return "String"
@@ -239,6 +245,8 @@ export function DataImportPanel({ open, onClose, notebook_id, notebook_cell_orde
 
     const insert_all = useCallback(async () => {
         const start = notebook_cell_order ? notebook_cell_order.length : 0
+        // Sequential insertion is intentional: each cell must be added before
+        // the next so that the notebook cell order is preserved correctly.
         for (let i = 0; i < code_blocks.length; i++) {
             await pluto_actions.add_remote_cell_at(start + i, code_blocks[i].code)
         }
