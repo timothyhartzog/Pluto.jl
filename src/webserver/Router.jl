@@ -43,6 +43,14 @@ function http_router_for(session::ServerSession)
 
             isempty(strip(prompt)) && return json_response(json_err("prompt is empty"), 400)
 
+            # Allow deterministic mock responses in CI / test environments.
+            # Set PLUTO_CLAUDE_MOCK_RESPONSE to a non-empty string to skip the
+            # real claude CLI and return that string as the response instead.
+            mock = get(ENV, "PLUTO_CLAUDE_MOCK_RESPONSE", "")
+            if !isempty(mock)
+                return json_response(json_ok(mock))
+            end
+
             args = String["claude", "-p", prompt,
                           "--model", model,
                           "--output-format", "text",
