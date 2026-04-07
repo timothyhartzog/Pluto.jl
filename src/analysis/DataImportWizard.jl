@@ -24,7 +24,7 @@ CSV / TSV options:
 - `delimiter`:       Column separator character. Defaults to `','` for CSV and `'\\t'` for TSV.
 - `has_header`:      Whether the first row contains column names (default `true`).
 - `comment`:         Character that marks a comment line (`nothing` = disabled).
-- `missingstring`:   String that should be read as `missing` (default `""`).
+- `missingstring`:   String that should be read as `missing` (`nothing` = use CSV.jl default).
 - `dateformat`:      `DateFormat`-compatible string, e.g. `"yyyy-mm-dd"` (`nothing` = auto).
 - `types`:           Mapping from column name to Julia type string, e.g.
                      `Dict("age" => "Int64", "name" => "String")`.
@@ -46,7 +46,7 @@ Base.@kwdef struct ImportOptions
     delimiter::Char            = ','
     has_header::Bool           = true
     comment::Union{Char,Nothing}   = nothing
-    missingstring::Union{String,Nothing} = ""
+    missingstring::Union{String,Nothing} = nothing
     dateformat::Union{String,Nothing}    = nothing
     types::Union{Dict{String,String},Nothing} = nothing
     limit::Union{Int,Nothing}  = nothing
@@ -113,17 +113,6 @@ end
 # Internal helpers
 # ---------------------------------------------------------------------------
 
-"""Build a comma-separated keyword-argument string from a list of `key => value` pairs,
-filtering out `nothing` values and only including the pair when `include` is `true`."""
-function _kw_args(pairs::Vector{<:Pair})::String
-    parts = String[]
-    for (k, v) in pairs
-        v === nothing && continue
-        push!(parts, "$(k)=$(v)")
-    end
-    join(parts, ", ")
-end
-
 _repr_string(s::AbstractString) = repr(s)
 _repr_char(c::Char) = repr(c)
 
@@ -143,7 +132,7 @@ function _csv_kwargs(opts::ImportOptions, fmt::ImportFormat)::String
     opts.comment !== nothing &&
         push!(pairs, "comment" => _repr_char(opts.comment))
 
-    if opts.missingstring !== nothing && opts.missingstring != ""
+    if opts.missingstring !== nothing
         push!(pairs, "missingstring" => _repr_string(opts.missingstring))
     end
 

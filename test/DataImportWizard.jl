@@ -196,7 +196,7 @@ using Pluto.DataImportWizard: ImportFormat, CSV_FORMAT, TSV_FORMAT, PARQUET_FORM
         @test opts.delimiter     == ','
         @test opts.has_header    == true
         @test opts.comment       === nothing
-        @test opts.missingstring == ""
+        @test opts.missingstring === nothing
         @test opts.dateformat    === nothing
         @test opts.types         === nothing
         @test opts.limit         === nothing
