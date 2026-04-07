@@ -67,6 +67,7 @@ include("./analysis/Parse.jl")
 include("./analysis/is_just_text.jl")
 include("./analysis/DependencyCache.jl")
 include("./analysis/MoreAnalysis.jl")
+include("./analysis/DataImportWizard.jl")
 
 include("./evaluation/WorkspaceManager.jl")
 include("./evaluation/MacroAnalysis.jl")
