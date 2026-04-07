@@ -111,6 +111,36 @@ The HTTP server options. See [`SecurityOptions`](@ref) for additional settings.
     on_event::Function = ON_EVENT_DEFAULT
 end
 
+const AI_PROVIDER_DEFAULT = "none"
+const AI_BASE_URL_DEFAULT = ""
+const AI_MODEL_DEFAULT = ""
+const AI_API_KEY_ENV_DEFAULT = "PLUTO_AI_API_KEY"
+const AI_MAX_RETRIES_DEFAULT = 3
+const AI_TIMEOUT_DEFAULT = 60.0
+
+"""
+    AIOptions([; kwargs...])
+
+Options for the pluggable AI provider integration.
+
+# Keyword arguments
+
+- `provider::String = "$AI_PROVIDER_DEFAULT"` Which AI provider to use. Options: `"none"`, `"cloud"`, `"ollama"`.
+- `base_url::String = "$AI_BASE_URL_DEFAULT"` Provider endpoint URL. For `"cloud"` defaults to `"https://api.openai.com/v1"`; for `"ollama"` defaults to `"http://localhost:11434"`.
+- `model::String = "$AI_MODEL_DEFAULT"` Model identifier. For `"cloud"` defaults to `"gpt-4o"`; for `"ollama"` defaults to `"llama3.2"`.
+- `api_key_env::String = "$AI_API_KEY_ENV_DEFAULT"` Name of the environment variable holding the API key (used by the `"cloud"` provider).
+- `max_retries::Int = $AI_MAX_RETRIES_DEFAULT` Number of retries for transient errors (rate limits, timeouts, connectivity).
+- `timeout::Float64 = $AI_TIMEOUT_DEFAULT` Per-request timeout in seconds.
+"""
+@option mutable struct AIOptions
+    provider::String = AI_PROVIDER_DEFAULT
+    base_url::String = AI_BASE_URL_DEFAULT
+    model::String = AI_MODEL_DEFAULT
+    api_key_env::String = AI_API_KEY_ENV_DEFAULT
+    max_retries::Int = AI_MAX_RETRIES_DEFAULT
+    timeout::Float64 = AI_TIMEOUT_DEFAULT
+end
+
 const REQUIRE_SECRET_FOR_OPEN_LINKS_DEFAULT = true
 const REQUIRE_SECRET_FOR_ACCESS_DEFAULT = true
 const WARN_ABOUT_UNTRUSTED_CODE_DEFAULT = true
@@ -283,6 +313,7 @@ Collection of all settings that configure a Pluto session.
     security::SecurityOptions = SecurityOptions()
     evaluation::EvaluationOptions = EvaluationOptions()
     compiler::CompilerOptions = CompilerOptions()
+    ai::AIOptions = AIOptions()
 end
 
 function from_flat_kwargs(;
@@ -335,6 +366,13 @@ function from_flat_kwargs(;
         history_file::Union{Nothing,String} = HISTORY_FILE_DEFAULT,
         threads::Union{Nothing,String,Int} = default_number_of_threads(),
         cpu_target::Union{Nothing,String} = CPU_TARGET_DEFAULT,
+
+        ai_provider::String = AI_PROVIDER_DEFAULT,
+        ai_base_url::String = AI_BASE_URL_DEFAULT,
+        ai_model::String = AI_MODEL_DEFAULT,
+        ai_api_key_env::String = AI_API_KEY_ENV_DEFAULT,
+        ai_max_retries::Int = AI_MAX_RETRIES_DEFAULT,
+        ai_timeout::Float64 = AI_TIMEOUT_DEFAULT,
     )
     server = ServerOptions(;
         root_url,
@@ -390,7 +428,15 @@ function from_flat_kwargs(;
         threads,
         cpu_target,
     )
-    return Options(; server, security, evaluation, compiler)
+    ai = AIOptions(;
+        provider=ai_provider,
+        base_url=ai_base_url,
+        model=ai_model,
+        api_key_env=ai_api_key_env,
+        max_retries=ai_max_retries,
+        timeout=ai_timeout,
+    )
+    return Options(; server, security, evaluation, compiler, ai)
 end
 
 function _merge_notebook_compiler_options(notebook, options::CompilerOptions)::CompilerOptions

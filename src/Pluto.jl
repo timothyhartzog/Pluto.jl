@@ -54,6 +54,33 @@ include("./packages/temp dir in scratch.jl")
 include("./packages/PkgCompat.jl")
 include("./webserver/Status.jl")
 
+include("./ai/Providers.jl")
+include("./ai/CloudProvider.jl")
+include("./ai/OllamaProvider.jl")
+
+# Implement build_provider after all provider types are loaded
+function build_provider(options::Configuration.AIOptions)
+    provider = options.provider
+    if provider == "cloud"
+        api_key = get(ENV, options.api_key_env, "")
+        base_url = isempty(options.base_url) ? "https://api.openai.com/v1" : options.base_url
+        model    = isempty(options.model)    ? "gpt-4o"                    : options.model
+        return CloudProvider(; base_url, api_key, model,
+                               max_retries=options.max_retries,
+                               timeout=options.timeout)
+    elseif provider == "ollama"
+        base_url = isempty(options.base_url) ? "http://localhost:11434" : options.base_url
+        model    = isempty(options.model)    ? "llama3.2"               : options.model
+        return OllamaProvider(; base_url, model,
+                                max_retries=options.max_retries,
+                                timeout=options.timeout)
+    elseif provider == "none"
+        return nothing
+    else
+        error("Unknown AI provider: $(provider). Valid options: \"none\", \"cloud\", \"ollama\"")
+    end
+end
+
 include("./notebook/Cell.jl")
 include("./notebook/Notebook.jl")
 include("./notebook/saving and loading.jl")

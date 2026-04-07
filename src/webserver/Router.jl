@@ -59,6 +59,44 @@ function http_router_for(session::ServerSession)
     end
     HTTP.register!(router, "POST", "/api/claude", serve_claude)
     # ─────────────────────────────────────────────────────────────────────────
+
+    # ── Unified AI completion endpoint ───────────────────────────────────────
+    function serve_ai_complete(request::HTTP.Request)
+        try
+            body          = String(request.body)
+            prompt        = json_get(body, "prompt")
+            system_prompt = json_get(body, "system_prompt")
+            mode          = json_get(body, "mode", "complete")  # "complete" or "code"
+
+            isempty(strip(prompt)) && return json_response(json_err("prompt is empty"), 400)
+
+            provider = build_provider(session.options.ai)
+            if provider === nothing
+                return json_response(json_err("No AI provider is configured. " *
+                    "Set the `ai_provider` option to \"cloud\" or \"ollama\"."), 503)
+            end
+
+            kwargs = isempty(strip(system_prompt)) ? (;) : (; system_prompt)
+            result = if mode == "code"
+                complete_code(provider, prompt; kwargs...)
+            else
+                complete(provider, prompt; kwargs...)
+            end
+            return json_response(json_ok(result))
+        catch e
+            if e isa AIProviderError
+                status = e.code == AI_RATE_LIMIT    ? 429 :
+                         e.code == AI_UNAVAILABLE   ? 503 :
+                         e.code == AI_TIMEOUT       ? 504 :
+                         e.code == AI_EMPTY_PROMPT  ? 400 :
+                                                      500
+                return json_response(json_err(sprint(showerror, e)), status)
+            end
+            return json_response(json_err(sprint(showerror, e)), 500)
+        end
+    end
+    HTTP.register!(router, "POST", "/api/ai/complete", serve_ai_complete)
+    # ─────────────────────────────────────────────────────────────────────────
     HTTP.register!(router, "GET", "/possible_binder_token_please", r -> session.binder_token === nothing ? HTTP.Response(200,"") : HTTP.Response(200, session.binder_token))
     
     function try_launch_notebook_response(
