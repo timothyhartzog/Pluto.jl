@@ -70,6 +70,7 @@ verify_no_running_processes()
 @timeit_include("webserver_utils.jl")
 @timeit_include("DependencyCache.jl")
 @timeit_include("Throttled.jl")
+@timeit_include("Cleaning.jl")
 @timeit_include("cell_disabling.jl")
 @timeit_include("misc API.jl")
 
