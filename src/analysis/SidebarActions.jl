@@ -118,13 +118,12 @@ function notebook_context(notebook)::NotebookContext
     data_patterns = [
         r"\bCSV\b", r"\breadcsv\b", r"\bDataFrame\b", r"\bArrow\b",
         r"\bExcel\b", r"\bJLD2\b", r"\bNPZ\b", r"\bJSON\b", r"\bHTTP\b",
-        r"\bload\b", r"\bopen\b",
     ]
     plot_patterns = [
         r"\bplot\b", r"\bPlots\b", r"\bMakie\b", r"\bGadfly\b",
-        r"\bVegaLite\b", r"\bscatter\b", r"\bheatmap\b", r"\bbar\b",
+        r"\bVegaLite\b", r"\bscatter\b", r"\bheatmap\b", r"\bbar\(",
     ]
-    df_patterns = [r"\bDataFrame\b", r"\bdf\b"]
+    df_patterns = [r"\bDataFrame\b"]
 
     has_data_cells  = any(s -> any(p -> occursin(p, s), data_patterns),  sources)
     has_dataframes  = any(s -> any(p -> occursin(p, s), df_patterns),     sources)
