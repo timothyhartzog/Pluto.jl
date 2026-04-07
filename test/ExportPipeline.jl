@@ -15,6 +15,9 @@ using Pluto: Cell, Notebook, ExportPipeline
     nb.cells[2].output = Pluto.CellOutput(body="3", mime=MIME("text/plain"))
     nb.cells[3].output = Pluto.CellOutput(body="3", mime=MIME("text/plain"))
 
+    # A notebook with cells that have no output (body=nothing, never run)
+    nb_no_output = Notebook([Cell("a = 42"), Cell("b = a + 1")])
+
     # ──────────────────────────────────────────────────────────────────────────
     # ProvenanceMetadata
     # ──────────────────────────────────────────────────────────────────────────
@@ -76,8 +79,43 @@ using Pluto: Cell, Notebook, ExportPipeline
     end
 
     # ──────────────────────────────────────────────────────────────────────────
-    # CSV export (arbitrary Tables data)
+    # Markdown export – cells with no output (body=nothing)
     # ──────────────────────────────────────────────────────────────────────────
+    @testset "export_markdown (no-output cells)" begin
+        result = ExportPipeline.export_markdown(nb_no_output)
+        @test result isa ExportPipeline.ExportResult{String}
+        md = result.content
+        @test occursin("```julia", md)
+        @test occursin("a = 42", md)
+        # No block-quote lines expected since cells have no text output
+        @test !occursin("> ", md)
+    end
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # CSV export – non-Tables data should error
+    # ──────────────────────────────────────────────────────────────────────────
+    @testset "export_csv (error conditions)" begin
+        @test_throws Exception ExportPipeline.export_csv(42)  # plain Int is not a table
+    end
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # Bundle export – default temp dir
+    # ──────────────────────────────────────────────────────────────────────────
+    @testset "export_bundle (default temp dir)" begin
+        result = ExportPipeline.export_bundle(nb_no_output)
+        @test isdir(result.content)
+        @test isfile(joinpath(result.content, "provenance.toml"))
+    end
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # Notebook summary CSV – cells without runtime
+    # ──────────────────────────────────────────────────────────────────────────
+    @testset "export_notebook_summary_csv (no runtime)" begin
+        result = ExportPipeline.export_notebook_summary_csv(nb_no_output)
+        @test occursin("0", result.content)  # default 0 for unrun cells
+    end
+
+
     @testset "export_csv (generic data)" begin
         data = [(a=1, b="hello"), (a=2, b="world,\"quoted\"")]
         result = ExportPipeline.export_csv(data)

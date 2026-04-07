@@ -128,15 +128,16 @@ function export_markdown(notebook::Notebook; path::Union{Nothing,AbstractString}
     println(buf, _provenance_md_comment(prov), "\n")
 
     for cell in notebook.cells
-        is_disabled(cell) && continue
+        Pluto.is_disabled(cell) && continue
 
         println(buf, "```julia")
         println(buf, cell.code)
         println(buf, "```\n")
 
-        # Include plain-text output when available
+        # Include plain-text output when available; output.body defaults to
+        # `nothing` for cells that have not run yet, so we guard with `isa String`.
         output = cell.output
-        if output.mime == MIME("text/plain") && output.body isa String && !isempty(output.body)
+        if output.body isa String && !isempty(output.body) && output.mime == MIME("text/plain")
             for line in split(output.body, '\n')
                 println(buf, "> ", line)
             end
@@ -236,7 +237,7 @@ function export_notebook_summary_csv(notebook::Notebook; path::Union{Nothing,Abs
         (
             cell_id  = string(cell.cell_id),
             code     = first(cell.code, 80),
-            runtime_ns = something(cell.runtime, UInt64(0)),
+            runtime_ns = something(cell.runtime, UInt64(0)),  # 0 when cell has not run
             errored  = cell.errored,
         )
         for cell in notebook.cells
@@ -320,8 +321,5 @@ function export_notebook(notebook::Notebook, format::Symbol; kwargs...)
         throw(ArgumentError("Unknown export format: $(format). Must be :html, :markdown, :csv, or :bundle."))
     end
 end
-
-# Re-export helper so callers can introspect disabled status without importing Cell directly
-is_disabled(cell::Cell) = Pluto.is_disabled(cell)
 
 end # module ExportPipeline
