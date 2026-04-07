@@ -162,10 +162,10 @@ end
 
 function _unescape_json_string(s::AbstractString)
     replace(s,
+        "\\\\" => "\\",
         "\\n"  => "\n",
         "\\r"  => "\r",
         "\\t"  => "\t",
         "\\\"" => "\"",
-        "\\\\" => "\\",
     )
 end
