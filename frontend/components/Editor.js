@@ -55,6 +55,7 @@ import { is_desktop, move_notebook, wait_for_file_move } from "./DesktopInterfac
 import { with_query_params } from "../common/URLTools.js"
 import semver from "../imports/semver-es.js"
 import { ClaudePanel } from "./ClaudePanel.js"
+import { SidebarActions } from "./SidebarActions.js"
 
 // This is imported asynchronously - uncomment for development
 // import environment from "../common/Environment.js"
@@ -1378,7 +1379,12 @@ ${ctrl_or_cmd_name}${and}C:   ${t("t_key_ctrl_c")}
 ${ctrl_or_cmd_name}${and}X:   ${t("t_key_ctrl_x")}
 ${ctrl_or_cmd_name}${and}V:   ${t("t_key_ctrl_v")}
 
-${t("t_key_autosave_description")}`
+${t("t_key_autosave_description")}
+
+Sidebar quick actions:
+${ctrl_or_cmd_name}${and}Shift${and}↵:   Run all cells
+${ctrl_or_cmd_name}${and}Shift${and}A:   Add new cell
+${ctrl_or_cmd_name}${and}Shift${and}D:   Open docs panel`
                 )
                 e.preventDefault()
             } else if (e.key === "Escape") {
@@ -1732,6 +1738,12 @@ ${t("t_key_autosave_description")}`
                         notebook_id=${notebook.notebook_id}
                         notebook_cell_order=${notebook.cell_order}
                     />
+                    ${this.state.disable_ui
+                        ? null
+                        : html`<${SidebarActions}
+                              notebook=${notebook}
+                              disable_input=${this.state.disable_ui || !this.state.connected}
+                          />`}
                     
                     <${SafePreviewUI}
                         process_waiting_for_permission=${status.process_waiting_for_permission}
