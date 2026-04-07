@@ -55,6 +55,7 @@ import { is_desktop, move_notebook, wait_for_file_move } from "./DesktopInterfac
 import { with_query_params } from "../common/URLTools.js"
 import semver from "../imports/semver-es.js"
 import { ClaudePanel } from "./ClaudePanel.js"
+import { DataImportPanel } from "./DataImportPanel.js"
 
 // This is imported asynchronously - uncomment for development
 // import environment from "../common/Environment.js"
@@ -370,6 +371,7 @@ export class Editor extends Component {
             },
             export_menu_open: false,
             claude_panel_open: false,
+            data_import_panel_open: false,
 
             last_created_cell: null,
             selected_cells: [],
@@ -1545,7 +1547,7 @@ ${t("t_key_autosave_description")}`
 
     render() {
         const { launch_params } = this.props
-        let { export_menu_open, claude_panel_open, notebook } = this.state
+        let { export_menu_open, claude_panel_open, data_import_panel_open, notebook } = this.state
 
         const status = this.cached_status ?? statusmap(this.state, launch_params)
         const statusval = first_true_key(status)
@@ -1722,6 +1724,12 @@ ${t("t_key_autosave_description")}`
                                 title="Ask Claude to write cells"
                                 onClick=${() => this.setState({ claude_panel_open: !claude_panel_open })}
                             >✦ Claude</button>
+                            <button
+                                id="data-import-nav-btn"
+                                class=${data_import_panel_open ? "active" : ""}
+                                title="Import and analyze a dataset"
+                                onClick=${() => this.setState({ data_import_panel_open: !data_import_panel_open })}
+                            >📊 Data</button>
                             <button class="toggle_export" title=${t("t_export_action_ellipsis")} onClick=${() =>
                                 this.setState({ export_menu_open: !export_menu_open })}><span></span></button>
                         </nav>
@@ -1729,6 +1737,12 @@ ${t("t_key_autosave_description")}`
                     <${ClaudePanel}
                         open=${claude_panel_open}
                         onClose=${() => this.setState({ claude_panel_open: false })}
+                        notebook_id=${notebook.notebook_id}
+                        notebook_cell_order=${notebook.cell_order}
+                    />
+                    <${DataImportPanel}
+                        open=${data_import_panel_open}
+                        onClose=${() => this.setState({ data_import_panel_open: false })}
                         notebook_id=${notebook.notebook_id}
                         notebook_cell_order=${notebook.cell_order}
                     />
