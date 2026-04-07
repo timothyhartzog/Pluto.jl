@@ -1,5 +1,8 @@
 using Test
-import Pluto: Notebook, Cell, set_provenance!, clear_provenance!, is_ai_generated, get_provenance, generate_markdown, export_notebook, is_disabled, set_disabled, Telemetry
+import Pluto
+import Pluto: Notebook, Cell, generate_markdown, export_notebook
+import Pluto: set_provenance!, clear_provenance!, is_ai_generated, get_provenance
+import Pluto: is_disabled, set_disabled
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Telemetry: redact_sensitive
