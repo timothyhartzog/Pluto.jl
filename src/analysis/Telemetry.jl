@@ -187,36 +187,14 @@ response = @timed_ai_call("openai", "gpt-4o") call_llm(prompt)
 ```
 """
 macro timed_ai_call(provider, model, expr)
-    quote
-        local _t0        = time_ns()
-        local _success   = true
-        local _err_type  = nothing
-        local _result    = nothing
-        try
-            _result = $(esc(expr))
-        catch _e
-            _success  = false
-            _err_type = string(typeof(_e))
-            rethrow(_e)
-        finally
-            local _latency_ms = (time_ns() - _t0) / 1_000_000.0
-            record!(_global_store, AICallRecord(
-                Dates.now(),
-                string($(esc(provider))),
-                string($(esc(model))),
-                _latency_ms,
-                _success,
-                _err_type,
-                nothing,
-                nothing,
-                Dict{String,Any}(),
-            ))
-        end
-        _result
-    end
+    _timed_ai_call_expr(provider, model, :(_global_store), expr)
 end
 
 macro timed_ai_call(provider, model, store, expr)
+    _timed_ai_call_expr(provider, model, store, expr)
+end
+
+function _timed_ai_call_expr(provider, model, store, expr)
     quote
         local _t0        = time_ns()
         local _success   = true
