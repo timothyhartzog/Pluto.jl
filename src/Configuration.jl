@@ -60,6 +60,11 @@ const SIMULATED_PKG_LAG_DEFAULT = 0.0
 const INJECTED_JAVASCRIPT_DATA_URL_DEFAULT = "data:text/javascript;base64,"
 const ON_EVENT_DEFAULT = function(a) #= @info "$(typeof(a))" =# end
 
+const OLLAMA_HOST_DEFAULT = "http://localhost:11434"
+const OLLAMA_MODEL_DEFAULT = "llama3.2"
+const OLLAMA_TIMEOUT_SECONDS_DEFAULT = 120
+const OLLAMA_MAX_RETRIES_DEFAULT = 2
+
 """
     ServerOptions([; kwargs...])
 
@@ -85,6 +90,10 @@ The HTTP server options. See [`SecurityOptions`](@ref) for additional settings.
 - `simulated_pkg_lag::Real=$SIMULATED_PKG_LAG_DEFAULT` (internal) Extra lag to add to operations done by Pluto's package manager. Will be multiplied by `0.5 + rand()`.
 - `injected_javascript_data_url::String = "$INJECTED_JAVASCRIPT_DATA_URL_DEFAULT"` (internal) Optional javascript injectables to the front-end. Can be used to customize the editor, but this API is not meant for general use yet.
 - `on_event::Function = $ON_EVENT_DEFAULT`
+- `ollama_host::String = "$OLLAMA_HOST_DEFAULT"` Base URL of the local Ollama server used for the `/api/ollama` endpoint.
+- `ollama_model::String = "$OLLAMA_MODEL_DEFAULT"` Default Ollama model name. Can be overridden per-request via the `model` field in the JSON body.
+- `ollama_timeout_seconds::Int = $OLLAMA_TIMEOUT_SECONDS_DEFAULT` Maximum seconds to wait for an Ollama response before giving up.
+- `ollama_max_retries::Int = $OLLAMA_MAX_RETRIES_DEFAULT` Number of additional retry attempts on transient Ollama server errors (5xx / IO). Uses exponential back-off.
 - `root_url::Union{Nothing,String} = $ROOT_URL_DEFAULT` This setting is used to specify the root URL of the Pluto server, but this setting is *only* used to customize the launch message (*"Go to http://localhost:1234/ in your browser"*). You can probably ignore this and use `base_url` instead.
 - `base_url::String = "$BASE_URL_DEFAULT"` This (advanced) setting is used to specify a subpath at which the Pluto server will run, it should be a path starting and ending with a '/'. E.g. with `base_url = "/hello/world/"`, the server will run at `http://localhost:1234/hello/world/`, and you edit a notebook at `http://localhost:1234/hello/world/edit?id=...`.
 """
@@ -109,6 +118,10 @@ The HTTP server options. See [`SecurityOptions`](@ref) for additional settings.
     simulated_pkg_lag::Real = SIMULATED_PKG_LAG_DEFAULT
     injected_javascript_data_url::String = INJECTED_JAVASCRIPT_DATA_URL_DEFAULT
     on_event::Function = ON_EVENT_DEFAULT
+    ollama_host::String = OLLAMA_HOST_DEFAULT
+    ollama_model::String = OLLAMA_MODEL_DEFAULT
+    ollama_timeout_seconds::Int = OLLAMA_TIMEOUT_SECONDS_DEFAULT
+    ollama_max_retries::Int = OLLAMA_MAX_RETRIES_DEFAULT
 end
 
 const REQUIRE_SECRET_FOR_OPEN_LINKS_DEFAULT = true
@@ -306,6 +319,10 @@ function from_flat_kwargs(;
         simulated_pkg_lag::Real = SIMULATED_PKG_LAG_DEFAULT,
         injected_javascript_data_url::String = INJECTED_JAVASCRIPT_DATA_URL_DEFAULT,
         on_event::Function = ON_EVENT_DEFAULT,
+        ollama_host::String = OLLAMA_HOST_DEFAULT,
+        ollama_model::String = OLLAMA_MODEL_DEFAULT,
+        ollama_timeout_seconds::Int = OLLAMA_TIMEOUT_SECONDS_DEFAULT,
+        ollama_max_retries::Int = OLLAMA_MAX_RETRIES_DEFAULT,
 
         require_secret_for_open_links::Bool = REQUIRE_SECRET_FOR_OPEN_LINKS_DEFAULT,
         require_secret_for_access::Bool = REQUIRE_SECRET_FOR_ACCESS_DEFAULT,
@@ -357,6 +374,10 @@ function from_flat_kwargs(;
         simulated_pkg_lag,
         injected_javascript_data_url,
         on_event,
+        ollama_host,
+        ollama_model,
+        ollama_timeout_seconds,
+        ollama_max_retries,
     )
     security = SecurityOptions(;
         require_secret_for_open_links,

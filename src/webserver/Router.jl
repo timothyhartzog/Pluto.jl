@@ -59,6 +59,34 @@ function http_router_for(session::ServerSession)
     end
     HTTP.register!(router, "POST", "/api/claude", serve_claude)
     # ─────────────────────────────────────────────────────────────────────────
+
+    # ── Ollama local model adapter ────────────────────────────────────────────
+    function serve_ollama(request::HTTP.Request)
+        try
+            body          = String(request.body)
+            prompt        = json_get(body, "prompt")
+            model         = json_get(body, "model", session.options.server.ollama_model)
+            system_prompt = json_get(body, "system_prompt")
+
+            isempty(strip(prompt)) && return json_response(json_err("prompt is empty"), 400)
+
+            text, err = ollama_generate(
+                session.options.server.ollama_host,
+                model,
+                prompt,
+                system_prompt;
+                timeout_seconds = session.options.server.ollama_timeout_seconds,
+                max_retries     = session.options.server.ollama_max_retries,
+            )
+
+            err !== nothing && return json_response(json_err(err), 502)
+            return json_response(json_ok(text))
+        catch e
+            return json_response(json_err(sprint(showerror, e)), 500)
+        end
+    end
+    HTTP.register!(router, "POST", "/api/ollama", serve_ollama)
+    # ─────────────────────────────────────────────────────────────────────────
     HTTP.register!(router, "GET", "/possible_binder_token_please", r -> session.binder_token === nothing ? HTTP.Response(200,"") : HTTP.Response(200, session.binder_token))
     
     function try_launch_notebook_response(
