@@ -94,7 +94,7 @@ const PROMPT_INJECTION_PATTERNS = [
      MEDIUM, "probe for system-level instructions"),
 
     # Privilege escalation / DAN / similar
-    (r"\bDAN\b",                         HIGH,     "DAN jailbreak keyword"),
+    (r"\bDAN\s+(mode|jailbreak|prompt)\b",   HIGH,     "DAN jailbreak keyword"),
     (r"jailbreak",                        HIGH,     "jailbreak keyword"),
     (r"developer\s+mode",                 HIGH,     "developer-mode override attempt"),
     (r"sudo\s+mode",                      HIGH,     "sudo-mode override attempt"),
@@ -200,7 +200,7 @@ const RISKY_CODE_PATTERNS = [
 
     # Serialization / deserialization of untrusted data
     (r"\bdeserialize\s*\(",                 HIGH,     "deserialization (unsafe with untrusted data)"),
-    (r"\bBase\.serialize\s*\|Base\.deserialize\b",
+    (r"\b(Base\.serialize|Base\.deserialize)\b",
      HIGH, "object serialization"),
 ]
 
