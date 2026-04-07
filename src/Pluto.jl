@@ -45,6 +45,7 @@ using ExpressionExplorer
 
 include("./notebook/path helpers.jl")
 include("./notebook/Export.jl")
+include("./notebook/Telemetry.jl")
 include("./Configuration.jl")
 
 include("./evaluation/Tokens.jl")

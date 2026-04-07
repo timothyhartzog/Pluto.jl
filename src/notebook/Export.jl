@@ -281,6 +281,98 @@ function replace_with_cdn(cdnify::Function, s::String, idx::Integer=1; lang::Sym
 end
 
 """
+    generate_markdown(notebook::Notebook) -> String
+
+Export a Pluto notebook as a Markdown document.
+
+Each cell's source code is wrapped in a fenced Julia code block. Cells that
+produced a plain-text output also have that output appended beneath the code
+block. Disabled cells are skipped.
+
+The document starts with frontmatter information (title, description, author)
+when available.
+"""
+function generate_markdown(notebook)::String
+    io = IOBuffer()
+
+    fm = frontmatter(notebook)
+
+    # Write YAML-style frontmatter header when metadata is available
+    if !isempty(fm)
+        println(io, "---")
+        for key in ("title", "description", "author", "tags")
+            if haskey(fm, key)
+                v = fm[key]
+                if v isa AbstractVector
+                    println(io, "$(key):")
+                    for item in v
+                        println(io, "  - $(item)")
+                    end
+                else
+                    println(io, "$(key): $(v)")
+                end
+            end
+        end
+        println(io, "---")
+        println(io)
+    end
+
+    # Title heading from frontmatter
+    if haskey(fm, "title")
+        println(io, "# $(fm["title"])")
+        println(io)
+    end
+
+    for cell in notebook.cells
+        # Skip disabled cells
+        is_disabled(cell) && continue
+
+        code = cell.code
+        isempty(strip(code)) && continue
+
+        println(io, "```julia")
+        println(io, code)
+        println(io, "```")
+
+        # Append plain-text output when available
+        output = cell.output
+        if output.mime == MIME"text/plain"() && output.body isa String && !isempty(output.body)
+            println(io)
+            println(io, output.body)
+        end
+
+        println(io)
+    end
+
+    String(take!(io))
+end
+
+
+"""
+    export_notebook(notebook::Notebook; format::Symbol=:html, kwargs...) -> String
+
+Export `notebook` in the requested `format`. Supported values:
+
+- `:html` – calls [`generate_html`](@ref) (default)
+- `:markdown` – calls [`generate_markdown`](@ref)
+- `:script` – returns the notebook as a plain Julia script (same file that is saved to disk)
+
+Any additional `kwargs` are forwarded to [`generate_html`](@ref) when `format == :html`.
+"""
+function export_notebook(notebook; format::Symbol=:html, kwargs...)::String
+    if format === :html
+        generate_html(notebook; kwargs...)
+    elseif format === :markdown
+        generate_markdown(notebook)
+    elseif format === :script
+        sprint(io -> save_notebook(io, notebook))
+    else
+        throw(ArgumentError("Unsupported export format: $(format). Use :html, :markdown, or :script."))
+    end
+end
+
+
+"""
 Generate a custom index.html that is designed to display a custom set of featured notebooks, without the file UI or Pluto logo. This is to be used by [PlutoSliderServer.jl](https://github.com/JuliaPluto/PlutoSliderServer.jl) to show a fancy index page.
 """
 function generate_index_html(;
