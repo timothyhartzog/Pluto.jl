@@ -1,0 +1,16 @@
+{
+  "name": "pluto-playwright-tests",
+  "version": "1.0.0",
+  "description": "Playwright end-to-end tests for Pluto.jl with extensive error handling",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  },
+  "license": "MIT"
+}
